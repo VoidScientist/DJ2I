@@ -17,14 +17,14 @@ Pour la compilation, il faut que les fichiers en-têtes se trouvent dans `includ
 Le compilateur ARM par défaut est celui du sous-module `tools` originaire de [ce dépôt](https://github.com/raspberrypi/tools).
 
 ## Structure actuelle du projet:
-
-.
+```
+. 
 ├── builds
-│   └── `TARGET`
+│   └── <TARGET>
 ├── include
-│   └── `LIB_NAME`
+│   └── <LIB_NAME>
 ├── lib
-│   └── `TARGET`
+│   └── <TARGET>
 ├── Makefile
 ├── README.md
 ├── src
@@ -32,4 +32,4 @@ Le compilateur ARM par défaut est celui du sous-module `tools` originaire de [c
 └── tools
     ├── arm-bcm2708
     └── ...
-
+```
