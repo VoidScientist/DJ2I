@@ -83,7 +83,7 @@ RPI_INSTALL_PATH = ~/$(PROJECT_NAME)
 all: clean build
 
 
-build: build-init $(BUILD_PATH)/buzzer
+build: build-init $(BUILD_PATH)/buzzer $(BUILD_PATH)/led_matrix
 	$Q echo Fini de compiler pour: $(TARGET) !
 
 
