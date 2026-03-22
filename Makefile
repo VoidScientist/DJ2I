@@ -34,22 +34,35 @@ endif
 # |
 # | Chemin vers dossier builds pour les exécutables
 # |
-BUILD_PATH = builds/$(TARGET)
+BUILD_ROOT = builds
+BUILD_PATH = $(BUILD_ROOT)/$(TARGET)
 # |
 # | Chemins vers le dossier contenant les librairies
 # |
 LIB_PATH = lib/$(TARGET)
-INCLUDE_PATH = include/**
+INCLUDE_PATH = include
+OBJ_ROOT = .obj
+OBJ_PATH = $(OBJ_ROOT)/$(TARGET)
 # |
 # | Flags compilation C
 # |
-CFLAGS = -Wall 
-LDFLAGS = -L $(LIB_PATH) -I $(INCLUDE_PATH)
+CFLAGS = -Wimplicit -I $(INCLUDE_PATH)
+LDFLAGS = -L $(LIB_PATH)
+
+ifeq ($(TARGET), x86_64)
+CFLAGS += -DSIMULATED
+else ifeq ($(TARGET), ARM)
+OPTWIRINGPI = -lwiringPi
+endif
+
+ifdef DEBUG
+CFLAGS += -Wall
+endif
+
 # |
 # | Chemins vers différents sous-dossiers
 # |
 SRC_PATH = src
-SRC_EXP_PATH = $(SRC_PATH)/experimental
 
 
 # == VARIABLES LOGGING ==
@@ -79,35 +92,36 @@ RPI_LIB_PATH = /lib
 RPI_INSTALL_PATH = ~/$(PROJECT_NAME)
 
 
+all: clean build $(BUILD_PATH)/button_matrix_test
 
-all: clean build
+
+include $(SRC_PATH)/drivers/drivers.mk
+include $(SRC_PATH)/experimental/experimental.mk
 
 
-build: build-init $(BUILD_PATH)/buzzer $(BUILD_PATH)/led_matrix
+build: build-init drivers-build experimental-build
 	$Q echo Fini de compiler pour: $(TARGET) !
 
 
 build-init:
 	$Q echo Compilation pour $(TARGET)...
-	$Q mkdir -p $(BUILD_PATH)
+	$Q mkdir -p $(BUILD_PATH) $(OBJ_PATH)
 
 
-$(BUILD_PATH)/%: $(SRC_EXP_PATH)/%.c
-	$Q $(CC) $(LDFLAGS) $(CFLAGS) -lwiringPi $< -o $@ 
-	$Q echo Compilé: $@.
-
-
-clean:
+clean: drivers-clean
 	$Q echo Suppression de tous les builds.
-	$Q rm -rf builds
+	$Q rm -rf $(BUILD_PATH) $(OBJ_PATH)
 
 
 install:
 	$Q echo Envoi des builds ARM à $(RPI_TARGET):$(RPI_INSTALL_PATH).
 	$Q ssh $(RPI_TARGET) $(RPI_SSH_ID_PARAM) "mkdir -p $(RPI_INSTALL_PATH)"
 	$Q scp $(RPI_SSH_ID_PARAM) builds/ARM/* $(RPI_TARGET):$(RPI_INSTALL_PATH)
+	
+
+install-libs:
 	$Q echo Envoi des librairies ARM à $(RPI_TARGET):/lib.
-	$Q scp $(RPI_SSH_ID_PARAM) lib/ARM/* $(RPI_TARGET):$(PROJECT_NAME).tmp
+	$Q scp $(RPI_SSH_ID_PARAM) lib/ARM/*.so $(RPI_TARGET):$(PROJECT_NAME).tmp
 	$Q ssh $(RPI_SSH_ID_PARAM) $(RPI_TARGET) "sudo mv $(PROJECT_NAME).tmp/* /lib && rmdir $(PROJECT_NAME).tmp"
 
 
@@ -119,4 +133,4 @@ setup-keyauth:
 	$Q echo -e "C'est tout bon !" 
 
 
-.PHONY: all build build-init clean install setup-keyauth
+.PHONY: all build build-init clean install install-libs setup-keyauth
