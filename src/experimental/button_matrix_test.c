@@ -1,6 +1,3 @@
-
-#include <stdlib.h>
-
 #ifndef SIMULATED
     #include <wiringPi/wiringPi.h>
 #endif
@@ -33,7 +30,7 @@ int main(void) {
         
         if (DBUTTON_isJustPressed(0, 1)) {
 
-            i = abs(i + 7) % 8;
+            i = (i + 7) % 8;
 
         }
 

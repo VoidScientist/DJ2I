@@ -14,7 +14,7 @@ DRIVERS_LIB := $(LIB_PATH)/libdrivers.a
 drivers-build: $(DRIVERS_LIB)
 
 $(OBJ_PATH)/%.o: $(SRC_PATH)/drivers/%.c
-	$Q $(CC) $(CFLAGS) $(LDFLAGS) -c $< -o $@ $(OPTWIRINGPI)
+	$Q $(CC) $(CFLAGS) $(LDFLAGS) -c $< -o $@ 
 	$Q echo -e "Compilé: $@"
 
 
