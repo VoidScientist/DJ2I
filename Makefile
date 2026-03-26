@@ -46,7 +46,7 @@ OBJ_PATH = $(OBJ_ROOT)/$(TARGET)
 # |
 # | Flags compilation C
 # |
-CFLAGS = -Wimplicit -I $(INCLUDE_PATH)
+CFLAGS = -Wimplicit -I $(INCLUDE_PATH) -std=c11
 LDFLAGS = -L $(LIB_PATH)
 
 ifeq ($(TARGET), x86_64)
@@ -92,14 +92,15 @@ RPI_LIB_PATH = /lib
 RPI_INSTALL_PATH = ~/$(PROJECT_NAME)
 
 
-all: clean build $(BUILD_PATH)/button_matrix_test
+all: clean build 
 
 
 include $(SRC_PATH)/drivers/drivers.mk
 include $(SRC_PATH)/experimental/experimental.mk
+include $(SRC_PATH)/audio/audio.mk
 
 
-build: build-init drivers-build experimental-build
+build: build-init drivers-build audio-build experimental-build
 	$Q echo Fini de compiler pour: $(TARGET) !
 
 
@@ -108,7 +109,7 @@ build-init:
 	$Q mkdir -p $(BUILD_PATH) $(OBJ_PATH)
 
 
-clean: drivers-clean
+clean: drivers-clean audio-clean
 	$Q echo Suppression de tous les builds.
 	$Q rm -rf $(BUILD_PATH) $(OBJ_PATH)
 

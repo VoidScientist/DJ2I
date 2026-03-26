@@ -5,6 +5,29 @@
 #include <drivers/buttons.h>
 #include <drivers/led_matrix.h> 
 
+int drawings[2][8] = {
+    {
+        0b00111100,
+        0b01000010,
+        0b10100101,
+        0b10000001,
+        0b10100101,
+        0b10011001,
+        0b01000010,
+        0b00111100
+    },
+    {
+        0b00111100,
+        0b01000010,
+        0b10100101,
+        0b10000001,
+        0b10011001,
+        0b10100101,
+        0b01000010,
+        0b00111100
+    }
+
+};
 
 int main(void) {
 
@@ -24,19 +47,21 @@ int main(void) {
 
         if (DBUTTON_isJustPressed(0, 0)) {
 
-            i = (i + 1) % 8;
+            i = (i + 1) % 2;
 
         }
         
         if (DBUTTON_isJustPressed(0, 1)) {
 
-            i = (i + 7) % 8;
+            break;
 
         }
 
         DMATRIX_clearBuffer();
 
-        DMATRIX_setColumn(i, 0b11100000);
+        for (int j = 0; j < 8; j++) {
+            DMATRIX_setRow(j, drawings[i][j]);
+        }
 
         DMATRIX_renderBuffer();
 
@@ -45,6 +70,8 @@ int main(void) {
 #endif
 
     }
+
+    DMATRIX_clearMatrix();
 
     return 0;
 }

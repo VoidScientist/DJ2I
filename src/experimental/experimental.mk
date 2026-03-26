@@ -2,18 +2,26 @@
 # Makefile des programmes expérimentaux du projet DJ2I
 #
 # Auteurs: 	- ARCELON Louis
-# 			- MARTEL Mathieu
 #
 
-EXPERIMENTAL_SRC := $(wildcard $(SRC_PATH)/experimental/*.c)
-
 EXPERIMENTAL_FOLDER := $(BUILD_PATH)
+EXPERIMENTAL_SRC    := $(SRC_PATH)/experimental
 
-EXPERIMENTAL_TARGET := $(patsubst $(SRC_PATH)/experimental/%.c, $(BUILD_PATH)/%, $(EXPERIMENTAL_SRC))
 
 
-experimental-build: $(EXPERIMENTAL_TARGET)
 
-$(BUILD_PATH)/%: $(SRC_PATH)/experimental/%.c
-	$Q $(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@ -ldrivers $(OPTWIRINGPI)
+experimental-build: $(EXPERIMENTAL_FOLDER) $(EXPERIMENTAL_FOLDER)/audio_test $(EXPERIMENTAL_FOLDER)/button_matrix_test
+
+
+$(EXPERIMENTAL_FOLDER)/button_matrix_test: $(EXPERIMENTAL_SRC)/button_matrix_test.c
+	$Q $(CC) $(CFLAGS) $(LDFLAGS) $< -o $@ -ldrivers $(OPTWIRINGPI)
 	$Q echo -e "Compilé: $@"
+
+
+$(EXPERIMENTAL_FOLDER)/audio_test: $(EXPERIMENTAL_SRC)/audio_test.c
+	$Q $(CC) $(CFLAGS) $(LDFLAGS) $< -o $@ -ldrivers $(OPTWIRINGPI) -laudio -lSDL2 -lSDL2_mixer -lm
+	$Q echo -e "Compilé: $@"
+
+
+$(EXPERIMENTAL_FOLDER):
+	mkdir -p $(EXPERIMENTAL_FOLDER)

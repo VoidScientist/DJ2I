@@ -70,7 +70,7 @@ void DMATRIX_setupMatrix() {
     wasSetup = 1;
 
 	DMATRIX_setOperationMode(M_ON);
-	DMATRIX_setBrightness(M_BRIGHT);
+	DMATRIX_setBrightness(M_VERY_DIM);
 	DMATRIX_disableBDecode();
 	DMATRIX_enableAllRows();
 
