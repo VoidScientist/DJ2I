@@ -24,7 +24,6 @@ int main(int argc, char *argv[])
 
     wav_path = (argc > 1) ? argv[1] : DEFAULT_WAV;
 
-    wiringPiSetupGpio();
     DMATRIX_setupMatrix();
     DMATRIX_setBrightness(M_VERY_DIM);
 

@@ -18,7 +18,7 @@
     #include <stdio.h>
 #endif
 
-
+#include <drivers/drivers_common.h>
 #include "drivers/buttons.h"
 
 
@@ -63,6 +63,8 @@ static int wasSetup = 0;
 
 
 void DBUTTON_setupButtons() {
+
+    DCOMMON_initWPi();
 
 #ifndef SIMULATED
 

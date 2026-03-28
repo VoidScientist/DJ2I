@@ -5,23 +5,28 @@
 #
 
 EXPERIMENTAL_FOLDER := $(BUILD_PATH)
-EXPERIMENTAL_SRC    := $(SRC_PATH)/experimental
+EXPERIMENTAL_SRC_PATH := $(SRC_PATH)/experimental
+
+EXPERIMENTAL_SRC = $(wildcard $(EXPERIMENTAL_SRC_PATH)/*.c)
+EXPERIMENTAL_TARGET = $(patsubst $(EXPERIMENTAL_SRC_PATH)/%.c, $(EXPERIMENTAL_FOLDER)/%, $(EXPERIMENTAL_SRC))
 
 
 
+experimental-build: $(EXPERIMENTAL_FOLDER) $(EXPERIMENTAL_TARGET)
 
-experimental-build: $(EXPERIMENTAL_FOLDER) $(EXPERIMENTAL_FOLDER)/audio_test $(EXPERIMENTAL_FOLDER)/button_matrix_test
 
-
-$(EXPERIMENTAL_FOLDER)/button_matrix_test: $(EXPERIMENTAL_SRC)/button_matrix_test.c
-	$Q $(CC) $(CFLAGS) $(LDFLAGS) $< -o $@ -ldrivers $(OPTWIRINGPI)
+$(EXPERIMENTAL_FOLDER)/button_matrix_test: $(EXPERIMENTAL_SRC_PATH)/button_matrix_test.c
+	$Q $(CC) $(CFLAGS) $(LDFLAGS) $< -o $@ -ldrivers $(OPTWIRINGPI) -laudio -lSDL2 -lSDL2_mixer
 	$Q echo -e "Compilé: $@"
 
 
-$(EXPERIMENTAL_FOLDER)/audio_test: $(EXPERIMENTAL_SRC)/audio_test.c
+$(EXPERIMENTAL_FOLDER)/audio_test: $(EXPERIMENTAL_SRC_PATH)/audio_test.c
 	$Q $(CC) $(CFLAGS) $(LDFLAGS) $< -o $@ -ldrivers $(OPTWIRINGPI) -laudio -lSDL2 -lSDL2_mixer -lm
 	$Q echo -e "Compilé: $@"
 
+$(EXPERIMENTAL_FOLDER)/exp_seven_seg: $(EXPERIMENTAL_SRC_PATH)/exp_seven_seg.c
+	$Q $(CC) $(CFLAGS) $(LDFLAGS) $< -o $@ -ldrivers $(OPTWIRINGPI) 
+	$Q echo -e "Compilé: $@"
 
 $(EXPERIMENTAL_FOLDER):
 	mkdir -p $(EXPERIMENTAL_FOLDER)

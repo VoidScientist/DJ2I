@@ -3,7 +3,10 @@
 #endif
 
 #include <drivers/buttons.h>
+#include <drivers/segment.h>
 #include <drivers/led_matrix.h> 
+
+#include <audio/sdl_player.h>
 
 int drawings[2][8] = {
     {
@@ -29,17 +32,21 @@ int drawings[2][8] = {
 
 };
 
-int main(void) {
+int main(int argc, char *argv[]) {
 
-    int i = 0;
+    int i           = 0;
+    int number      = 0;
+    char *audioName = NULL;
 
-#ifndef SIMULATED
-    wiringPiSetupGpio();
-#endif
-
+    if (argc > 1) {
+        audioName = argv[1];
+    }
 
     DMATRIX_setupMatrix();
     DBUTTON_setupButtons();
+    DSEGMENT_setupSegment();
+
+    sdl_player_init();
 
     while (1) {
 
@@ -57,12 +64,31 @@ int main(void) {
 
         }
 
+        if (DBUTTON_isJustPressed(0, 2)) {
+
+            number -= 5;
+
+        }
+
+        if (DBUTTON_isJustPressed(0, 3)) {
+
+            number += 5;
+
+        }
+
+        if (DBUTTON_isJustPressed(1, 0)) {
+
+            sdl_player_play(audioName);
+
+        }
+
         DMATRIX_clearBuffer();
 
         for (int j = 0; j < 8; j++) {
             DMATRIX_setRow(j, drawings[i][j]);
         }
 
+        DSEGMENT_displayNumber(number);
         DMATRIX_renderBuffer();
 
 #ifndef SIMULATED
@@ -71,6 +97,7 @@ int main(void) {
 
     }
 
+    DSEGMENT_setPowerState(DRIVERS_OFF);
     DMATRIX_clearMatrix();
 
     return 0;

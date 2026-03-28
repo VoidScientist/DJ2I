@@ -10,7 +10,8 @@
 #ifndef DMATRIX_H
 #define DMATRIX_H
 
-typedef enum {M_OFF, M_ON} powerState_t;
+#include <drivers/drivers_common.h>
+
 typedef enum {M_VERY_DIM, M_DIM, M_BRIGHT, M_VERY_BRIGHT} brightLevel_t;
 
 

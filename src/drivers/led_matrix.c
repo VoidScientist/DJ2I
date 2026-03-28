@@ -17,6 +17,7 @@
     #include <string.h>
 #endif
 
+#include <drivers/drivers_common.h>
 #include "drivers/led_matrix.h"
 
 
@@ -55,6 +56,8 @@ static int wasSetup = 0;
 
 void DMATRIX_setupMatrix() {
 
+    DCOMMON_initWPi();
+
 #ifndef SIMULATED
 
     printf("Mode du pilote de la matrice de leds: HARDWARE.\n");
@@ -69,7 +72,7 @@ void DMATRIX_setupMatrix() {
 
     wasSetup = 1;
 
-	DMATRIX_setOperationMode(M_ON);
+	DMATRIX_setOperationMode(DRIVERS_ON);
 	DMATRIX_setBrightness(M_VERY_DIM);
 	DMATRIX_disableBDecode();
 	DMATRIX_enableAllRows();
