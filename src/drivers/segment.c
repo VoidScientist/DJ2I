@@ -135,7 +135,11 @@ void DSEGMENT_displayNumber(int number) {
     if (number < 0) {
         number = -number;
         availableDigits--;
+#ifndef SIMULATED
         wiringPiI2CWriteReg8(seg_fd, seg_digits[DIGIT_NUMB-1], minusSign);
+#else
+        printf("[DSEGMENT] On envoie au registre %02x: %02x\n", seg_digits[DIGIT_NUMB-1], minusSign);
+#endif
     }
 
     for (int i = 0; i < availableDigits; i++) {
