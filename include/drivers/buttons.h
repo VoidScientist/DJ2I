@@ -21,7 +21,7 @@ void DBUTTON_displayButtonMap();
 
 int DBUTTON_scanButtons();
 
-void DBUTTON_getButtonMap(buttonState_t* result, int size);
+void DBUTTON_getButtonMap(buttonStateMap_t map);
 
 buttonState_t DBUTTON_getButtonState(int row, int column);
 

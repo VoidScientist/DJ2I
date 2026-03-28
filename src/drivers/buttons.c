@@ -24,7 +24,6 @@
 
 #define ROWS 4
 #define COLS 4
-#define BUTTON_AMOUNT 16
 
 
 #ifndef SIMULATED
@@ -198,10 +197,9 @@ void DBUTTON_displayButtonMap() {
 }
 
 
-void DBUTTON_getButtonMap(buttonState_t *result, int size) {
+void DBUTTON_getButtonMap(buttonStateMap_t result) {
 
-    int cpySize = size <= BUTTON_AMOUNT ? size : BUTTON_AMOUNT;
-    memcpy(result, map, cpySize * sizeof(buttonState_t));
+    memcpy(result, map, BUTTON_AMOUNT * sizeof(buttonState_t));
 
 }
 

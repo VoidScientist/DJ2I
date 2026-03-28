@@ -186,7 +186,7 @@ static void lancerModeConnecte(char *ip, int port) {
 
 		for (int i = 0; i < NUM_BUTTONS; i++) {
 
-			DBUTTON_getButtonMap(map, BUTTON_AMOUNT);
+			DBUTTON_getButtonMap(map);
 
 			envoyerBouton(&sockPC, map);
 
