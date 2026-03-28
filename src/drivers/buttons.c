@@ -42,9 +42,6 @@
 #endif
 
 
-typedef buttonState_t buttonStateMap_t[BUTTON_AMOUNT];
-
-
 static void updateOld();
 static int buttonFromCoords(int row, int col);
 

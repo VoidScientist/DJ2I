@@ -46,7 +46,7 @@ OBJ_PATH = $(OBJ_ROOT)/$(TARGET)
 # |
 # | Flags compilation C
 # |
-CFLAGS = -Wimplicit -I $(INCLUDE_PATH) -std=c11
+CFLAGS = -Wimplicit -I $(INCLUDE_PATH) -std=c11 -D_POSIX_C_SOURCE=200809L
 LDFLAGS = -L $(LIB_PATH)
 
 ifeq ($(TARGET), x86_64)
@@ -98,9 +98,11 @@ all: clean build
 include $(SRC_PATH)/drivers/drivers.mk
 include $(SRC_PATH)/experimental/experimental.mk
 include $(SRC_PATH)/audio/audio.mk
+include $(SRC_PATH)/app/app.mk
+include $(SRC_PATH)/inet/inet.mk
+include $(SRC_PATH)/logging/logging.mk
 
-
-build: build-init drivers-build audio-build experimental-build
+build: build-init drivers-build audio-build app-build inet-build logging-build experimental-build
 	$Q echo Fini de compiler pour: $(TARGET) !
 
 
@@ -109,7 +111,7 @@ build-init:
 	$Q mkdir -p $(BUILD_PATH) $(OBJ_PATH)
 
 
-clean: drivers-clean audio-clean
+clean: drivers-clean audio-clean app-clean inet-clean logging-clean
 	$Q echo Suppression de tous les builds.
 	$Q rm -rf $(BUILD_PATH) $(OBJ_PATH)
 

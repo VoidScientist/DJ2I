@@ -10,9 +10,10 @@
 #ifndef DBUTTON_H
 #define DBUTTON_H
 
+#define BUTTON_AMOUNT 16
 
 typedef enum {B_IDLE, B_RELEASED, B_PRESSED, B_HELD} buttonState_t;
-
+typedef buttonState_t buttonStateMap_t[BUTTON_AMOUNT];
 
 void DBUTTON_setupButtons();
 
