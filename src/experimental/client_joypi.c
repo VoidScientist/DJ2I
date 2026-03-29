@@ -29,6 +29,8 @@
 #include "audio/sdl_player.h"
 #include "audio/fft_engine.h"
 #include "audio/spectrum_mapper.h"
+#include <audio/timing.h>
+#include <audio/record.h>
 
 #include <drivers/buttons.h>
 #include <drivers/led_matrix.h>
@@ -202,6 +204,14 @@ static void lancerModeConnecte(char *ip, int port) {
  *	\noop		M O D E   L O C A L
  */
 
+
+void onNewTick(int currentTick) {
+
+	RECORD_playRecorded(currentTick);
+	DSEGMENT_displayNumber(currentTick);
+
+}
+
 static void lancerModeLocal() {
 	float			pcm[PLAYER_FRAME_SIZE];
 	float			magnitudes[FFT_BINS];
@@ -218,10 +228,9 @@ static void lancerModeLocal() {
 
 	int 			beatSubdAmount = 0;
 
-	
+	printf("Subdivision Beat Time: %d ms\n", beatTimeMs);
 
-	printf("Subdivision Beat Time: %d ms", beatTimeMs);
-
+	TIMING_init(8, 1000, onNewTick);
 
 	printf("[client] Mode local\n");
 
@@ -260,6 +269,7 @@ static void lancerModeLocal() {
 
 			for (int i = 0; i < BUTTON_AMOUNT; i++) {
 				if (map[i] != B_PRESSED) continue;
+				RECORD_recordPress(buttonSounds[i], TIMING_getCurrentTick());
 				sdl_player_play_chunk(buttonSounds[i]);
 			}
 
@@ -295,9 +305,10 @@ static void lancerModeLocal() {
 			beatSubdAmount -= beatSubdivision;
 		}
 
-		DSEGMENT_displayNumber(beatSubdAmount);
 
 		timer += SDL_GetTicks() - start;
+
+		TIMING_update(SDL_GetTicks() - start);
 		
 	}
 
@@ -345,9 +356,12 @@ int main(int argc, char *argv[]) {
 	fprintf(stderr, "Lancement du client Joy-Pi [PID:%d] en mode %s\n",
 		getpid(), (mode == MODE_LOCAL) ? "LOCAL" : "CONNECTE");
 
+
+
 	DBUTTON_setupButtons();
 	DMATRIX_setupMatrix();
 	DSEGMENT_setupSegment();
+
 
 	if (mode == MODE_LOCAL) {
 		lancerModeLocal();
