@@ -122,7 +122,7 @@ static void onButtonUpdated(buttonStateMap_t map) {
 	for (int i = 0; i < BUTTON_AMOUNT; i++) {
 	
 		if (map[i] != B_PRESSED) continue;
-		Mix_PlayChannel(-1, buttonSounds[i], 0);
+		sdl_player_play_chunk(buttonSounds[i]);
 		printf("[serveur] Bouton %d -> son joue\n", i);
 	}
 
@@ -199,6 +199,8 @@ void serveur() {
 			spectrum_mapper_compute(magnitudes, &bandFrame);
 
 			pthread_mutex_lock(&mutexSpectrum);
+			for (i = 0; i < NB_COLUMNS; i++)
+				sharedSpectrum.columns[i] = bandFrame.heights[i];
 			pthread_mutex_unlock(&mutexSpectrum);
 
 		}

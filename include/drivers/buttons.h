@@ -31,4 +31,6 @@ int DBUTTON_isJustPressed(int row, int column);
 
 int DBUTTON_isJustReleased(int row, int column);
 
+int DBUTTON_changedLastFrame();
+
 #endif /* DBUTTON_H */

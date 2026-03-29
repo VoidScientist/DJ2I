@@ -1,7 +1,7 @@
 /**
  *  \file       sdl_player.c
  *  \brief      Implémentation de la capture audio avec SDL2
- *  \author     MARTEL Mathieu
+ *  \author     MARTEL Mathieu - ARCELON Louis
  *  \version    2.0
  */
 
@@ -132,6 +132,19 @@ int sdl_player_play(const char *wav_path)
     printf("[sdl_player] Lecture de '%s' (canal %d)\n", wav_path, channel);
     return 0;
 }
+
+
+int sdl_player_play_chunk(Mix_Chunk *chunk) {
+
+    int channel = Mix_PlayChannel(-1, chunk, 0);
+    if (channel < 0) {
+        fprintf(stderr, "[sdl_player] Erreur Mix_PlayChannel : %s\n", Mix_GetError());
+        Mix_FreeChunk(chunk);
+        return -1;
+    }
+    
+}
+
 
 void sdl_player_cleanup(void)
 {

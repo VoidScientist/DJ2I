@@ -56,6 +56,7 @@ static buttonStateMap_t old = {B_IDLE};
 
 
 static int wasSetup = 0;
+static int changedLastFrame = 0;
 
 
 void DBUTTON_setupButtons() {
@@ -226,12 +227,22 @@ int DBUTTON_isJustReleased(int row, int column) {
     return state == B_RELEASED;
 }
 
+int DBUTTON_changedLastFrame() {
+    return changedLastFrame;
+}
+
 
 static void updateOld() {
-	int i;
-	for (i = 0; i < BUTTON_AMOUNT; i++) {
+    int changed = 0;
+
+	for (int i = 0; i < BUTTON_AMOUNT; i++) {
+        if (old[i] != map[i]) {
+            changed = 1;
+        }
 		old[i] = map[i];
 	}
+
+    changedLastFrame = changed;
 }
 
 

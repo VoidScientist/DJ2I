@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <sys/select.h>
 
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 
@@ -30,6 +31,7 @@
 #include "audio/spectrum_mapper.h"
 
 #include <drivers/buttons.h>
+#include <drivers/led_matrix.h>
 
 #include "app/dial.h"
 
@@ -130,7 +132,7 @@ static void initButtonSounds() {
 static void jouerSon(uint8_t button_id) {
 	if (button_id >= MAX_BUTTONS)		return;
 	if (buttonSounds[button_id] == NULL)	return;
-	Mix_PlayChannel(-1, buttonSounds[button_id], 0);
+	sdl_player_play_chunk(buttonSounds[button_id]);
 }
 
 /*
@@ -138,23 +140,18 @@ static void jouerSon(uint8_t button_id) {
  *	\noop		C A L L B A C K S   M O D E   C O N N E C T E
  */
 
-/*
- * Reconstitue la hauteur d'une barre à partir de son registre uint8_t.
- * Registre = (1 << (h+1)) - 1, donc hauteur = position du bit le plus haut.
- */
-static uint8_t registreVersHauteur(uint8_t registre) {
-	uint8_t hauteur = 0;
-	uint8_t tmp     = registre >> 1;	/* bit 0 = ligne de base, on ignore */
+static void onSpectrumReceived(SpectrumData_t *spectrum) {
 
-	while (tmp) {
-		hauteur++;
-		tmp >>= 1;
+	for (int b = 0; b < NUM_BANDS; b++) {
+
+		unsigned char command = (1 << spectrum->columns[b]) - 1;
+
+		DMATRIX_setColumn(b * 2, command);
+		DMATRIX_setColumn(b * 2 + 1, command);
+
 	}
 
-	return (hauteur > MAX_HEIGHT) ? MAX_HEIGHT : hauteur;
-}
-
-static void onSpectrumReceived(SpectrumData_t *spectrum) {
+	DMATRIX_renderBuffer();
 
 }
 
@@ -182,9 +179,11 @@ static void lancerModeConnecte(char *ip, int port) {
 	pthread_create(&threadDial, NULL, (void *)(void *) dialClt2SrvPC, params);
 
 	while (!mustDisconnect) {
+
 		DBUTTON_scanButtons();
 
-		for (int i = 0; i < NUM_BUTTONS; i++) {
+
+		if (DBUTTON_changedLastFrame()) {
 
 			DBUTTON_getButtonMap(map);
 
@@ -197,6 +196,8 @@ static void lancerModeConnecte(char *ip, int port) {
 	do {
 		result = sem_wait(&semCanClose);
 	} while (result == -1 && errno == EINTR);
+
+	DMATRIX_clearMatrix();
 
 	pthread_join(threadDial, NULL);
 }
@@ -319,6 +320,7 @@ int main(int argc, char *argv[]) {
 		getpid(), (mode == MODE_LOCAL) ? "LOCAL" : "CONNECTE");
 
 	DBUTTON_setupButtons();
+	DMATRIX_setupMatrix();
 
 	if (mode == MODE_LOCAL) {
 		lancerModeLocal();

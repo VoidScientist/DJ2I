@@ -46,7 +46,7 @@ OBJ_PATH = $(OBJ_ROOT)/$(TARGET)
 # |
 # | Flags compilation C
 # |
-CFLAGS = -Wimplicit -I $(INCLUDE_PATH) -std=c11 -D_POSIX_C_SOURCE=200809L
+CFLAGS = -Wimplicit -I $(INCLUDE_PATH) -std=c11 -D_POSIX_C_SOURCE=200809L 
 LDFLAGS = -L $(LIB_PATH)
 
 ifeq ($(TARGET), x86_64)

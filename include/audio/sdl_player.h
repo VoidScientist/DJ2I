@@ -1,7 +1,7 @@
 /**
  *	\file		sdl_player.h
  *	\brief		Gestion de la lecture audio avec SDL2
- *	\author		MARTEL Mathieu
+ *	\author		MARTEL Mathieu - ARCELON Louis
  *	\version	2.0
  */
 
@@ -15,6 +15,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+
+#include <SDL2/SDL_mixer.h>
 
 /*
 *****************************************************************************************
@@ -82,5 +84,8 @@ bool	sdl_player_is_playing(void);
  * @return true si assez d'échantillons disponibles
  */
 bool	sdl_player_read_frame(float *out, size_t count);
+
+
+int sdl_player_play_chunk(Mix_Chunk *chunk);
 
 #endif /* SDL_PLAYER_H */
