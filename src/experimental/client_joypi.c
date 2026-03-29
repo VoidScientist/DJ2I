@@ -32,6 +32,7 @@
 
 #include <drivers/buttons.h>
 #include <drivers/led_matrix.h>
+#include <drivers/segment.h>
 
 #include "app/dial.h"
 
@@ -129,12 +130,6 @@ static void initButtonSounds() {
 	}
 }
 
-static void jouerSon(uint8_t button_id) {
-	if (button_id >= MAX_BUTTONS)		return;
-	if (buttonSounds[button_id] == NULL)	return;
-	sdl_player_play_chunk(buttonSounds[button_id]);
-}
-
 /*
 *****************************************************************************************
  *	\noop		C A L L B A C K S   M O D E   C O N N E C T E
@@ -211,8 +206,22 @@ static void lancerModeLocal() {
 	float			pcm[PLAYER_FRAME_SIZE];
 	float			magnitudes[FFT_BINS];
 	BandFrame_t		bandFrame;
-	Uint32			t0, elapsed;
-	char			input;
+	buttonStateMap_t map;
+
+
+	int 			timer = 0;
+	int				start = 0;
+
+	int 			bpm = 160;
+	int				beatSubdivision = 8;
+	int				beatTimeMs = 60 * 1000 / bpm / beatSubdivision;
+
+	int 			beatSubdAmount = 0;
+
+	
+
+	printf("Subdivision Beat Time: %d ms", beatTimeMs);
+
 
 	printf("[client] Mode local\n");
 
@@ -237,52 +246,69 @@ static void lancerModeLocal() {
 
 	initButtonSounds();
 
-	fputs("\033[2J\033[H\033[?25l", stdout);
-	printf("Joy-Pi | Mode local | %d FPS\n", TARGET_FPS);
-	printf("Touches 0-9 : jouer un son | q : quitter\n");
-	fflush(stdout);
-
 	/* Boucle principale */
 	while (!mustDisconnect) {
-		t0 = SDL_GetTicks();
 
-		/* Lecture non bloquante d'un bouton (stdin ici, GPIO sur Joy-Pi réel) */
-		fd_set fds;
-		struct timeval tv = {0, 0};
-		FD_ZERO(&fds);
-		FD_SET(STDIN_FILENO, &fds);
+		start = SDL_GetTicks();
 
-		if (select(STDIN_FILENO + 1, &fds, NULL, NULL, &tv) > 0) {
-			input = (char)getchar();
+		DBUTTON_scanButtons();
 
-			if (input == 'q' || input == 'Q') {
-				mustDisconnect = 1;
-				break;
+
+		if (DBUTTON_changedLastFrame()) {
+
+			DBUTTON_getButtonMap(map);
+
+			for (int i = 0; i < BUTTON_AMOUNT; i++) {
+				if (map[i] != B_PRESSED) continue;
+				sdl_player_play_chunk(buttonSounds[i]);
 			}
 
-			if (input >= '0' && input <= '9') {
-				jouerSon((uint8_t)(input - '0'));
-			}
 		}
 
-		/* Pipeline FFT -> affichage matrice */
 		if (sdl_player_read_frame(pcm, PLAYER_FRAME_SIZE)) {
-			fft_engine_compute(pcm, magnitudes);
-			spectrum_mapper_compute(magnitudes, &bandFrame);
 
+            fft_engine_compute(pcm, magnitudes);
+            spectrum_mapper_compute(magnitudes, &bandFrame);
+
+
+            for (int b = 0; b < NUM_BANDS; b++) {
+
+                unsigned char command = (1 << bandFrame.heights[b]) - 1;
+
+                DMATRIX_setColumn(b * 2, command);
+                DMATRIX_setColumn(b * 2 + 1, command);
+
+            }
+
+            DMATRIX_renderBuffer();
+
+        }
+
+
+		if (timer >= beatTimeMs) {
+			beatSubdAmount++;
+			timer -= beatTimeMs;
 		}
 
-		elapsed = SDL_GetTicks() - t0;
-		if (elapsed < FRAME_MS)
-			SDL_Delay(FRAME_MS - elapsed);
+		if (beatSubdAmount >= beatSubdivision) {
+			sdl_player_play_chunk(buttonSounds[1]);
+			beatSubdAmount -= beatSubdivision;
+		}
+
+		DSEGMENT_displayNumber(beatSubdAmount);
+
+		timer += SDL_GetTicks() - start;
+		
 	}
+
+	DSEGMENT_setPowerState(DRIVERS_OFF);
+	DMATRIX_clearMatrix();
 
 	/* Nettoyage */
 	spectrum_mapper_reset();
 	fft_engine_cleanup();
 	sdl_player_cleanup();
 
-	fputs("\033[?25h\n", stdout);
 }
 
 /*
@@ -321,6 +347,7 @@ int main(int argc, char *argv[]) {
 
 	DBUTTON_setupButtons();
 	DMATRIX_setupMatrix();
+	DSEGMENT_setupSegment();
 
 	if (mode == MODE_LOCAL) {
 		lancerModeLocal();

@@ -139,7 +139,6 @@ int sdl_player_play_chunk(Mix_Chunk *chunk) {
     int channel = Mix_PlayChannel(-1, chunk, 0);
     if (channel < 0) {
         fprintf(stderr, "[sdl_player] Erreur Mix_PlayChannel : %s\n", Mix_GetError());
-        Mix_FreeChunk(chunk);
         return -1;
     }
     

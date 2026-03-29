@@ -5,6 +5,8 @@
 #include <drivers/buttons.h>
 #include <drivers/segment.h>
 #include <drivers/led_matrix.h> 
+#include <drivers/buzzer.h> 
+
 
 #include <audio/sdl_player.h>
 
@@ -45,6 +47,7 @@ int main(int argc, char *argv[]) {
     DMATRIX_setupMatrix();
     DBUTTON_setupButtons();
     DSEGMENT_setupSegment();
+    DBUZZER_setupBuzzer();
 
     sdl_player_init();
 
@@ -79,6 +82,18 @@ int main(int argc, char *argv[]) {
         if (DBUTTON_isJustPressed(1, 0)) {
 
             sdl_player_play(audioName);
+
+        }
+
+        if (DBUTTON_isJustPressed(1, 1)) {
+
+            DBUZZER_setBeep(1);
+
+        }
+
+        if (DBUTTON_isJustPressed(1, 2)) {
+
+            DBUZZER_setBeep(0);
 
         }
 
