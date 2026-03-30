@@ -19,6 +19,8 @@ void TIMING_init(int maxTimeS, int ticksAmount, timingCallback_t callback);
 
 void TIMING_update(int deltaMS);
 
+void TIMING_setPause(int state);
+
 int TIMING_getCurrentTick();
 
 int TIMING_getMaxTicks();

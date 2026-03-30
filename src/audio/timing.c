@@ -11,6 +11,10 @@
 #include <SDL2/SDL.h>
 #include <audio/timing.h>
 
+
+static int setupGuard();
+
+
 static int maxRecordTimeMS;
 static int maxTick;
 
@@ -19,6 +23,8 @@ static int tickTimeMS;
 static timingCallback_t callback;
 
 static int currentTick = 0;
+
+static int paused = 0;
 
 static int wasSetup = 0;
 
@@ -45,12 +51,10 @@ void TIMING_init(int maxTimeS, int ticksAmount, timingCallback_t callbackNew) {
 void TIMING_update(int deltaMS) {
     static int timer = 0;
 
-    if (!wasSetup) {
+    if (!setupGuard()) return;
 
-        printf("[timing] Utilisez TIMING_init() avant d'utiliser les fonctions de TIMING.\n");
-    
+    if (paused) {
         return;
-        
     }
 
     timer += deltaMS;
@@ -64,25 +68,38 @@ void TIMING_update(int deltaMS) {
 }
 
 int TIMING_getCurrentTick() {
-    if (!wasSetup) {
-
-        printf("[timing] Utilisez TIMING_init() avant d'utiliser les fonctions de TIMING.\n");
+    if (!setupGuard()) return -1;
     
-        return -1;
-        
-    }
     return currentTick;
 }
 
 
 int TIMING_getMaxTicks() {
+   
+    if (!setupGuard()) return -1;
+
+    return maxTick;
+}
+
+
+
+void TIMING_setPause(int state) {
+
+    paused = state;
+}
+
+
+static int setupGuard() {
+
     if (!wasSetup) {
 
         printf("[timing] Utilisez TIMING_init() avant d'utiliser les fonctions de TIMING.\n");
     
-        return -1;
+        return 0;
         
     }
-    return maxTick;
-}
 
+    return 1;
+
+
+}

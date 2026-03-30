@@ -25,5 +25,6 @@ void RECORD_recordPress(Mix_Chunk *data, int currentTick);
 
 void RECORD_playRecorded(int currentTick);
 
+void RECORD_clearRecordings();
 
 #endif
