@@ -29,6 +29,9 @@
 #include "audio/fft_engine.h"
 #include "audio/spectrum_mapper.h"
 
+#include <audio/timing.h>
+#include <audio/record.h>
+
 #include "app/dial.h"
 
 /*
@@ -122,8 +125,9 @@ static void onButtonUpdated(buttonStateMap_t map) {
 	for (int i = 0; i < BUTTON_AMOUNT; i++) {
 	
 		if (map[i] != B_PRESSED) continue;
+		RECORD_recordPress(buttonSounds[i], TIMING_getCurrentTick());
 		sdl_player_play_chunk(buttonSounds[i]);
-		printf("[serveur] Bouton %d -> son joue\n", i);
+
 	}
 
 }
@@ -164,6 +168,14 @@ static void *threadEcouteJoyPi(void *arg) {
 *****************************************************************************************
  *	\noop		F O N C T I O N   P R I N C I P A L E
  */
+
+void onNewTick(int currentTick) {
+
+	printf("\rCurrent Tick: %04d", currentTick);
+	fflush(stdout);
+	RECORD_playRecorded(currentTick);
+
+}
 
 void serveur() {
 	float			pcm[PLAYER_FRAME_SIZE];
@@ -206,6 +218,7 @@ void serveur() {
 		}
 
 		elapsed = SDL_GetTicks() - t0;
+		TIMING_update(FRAME_MS);
 		if (elapsed < FRAME_MS)
 			SDL_Delay(FRAME_MS - elapsed);
 	}
@@ -246,6 +259,8 @@ int main(int argc, char *argv[]) {
 		sdl_player_cleanup();
 		exit(EXIT_FAILURE);
 	}
+
+	TIMING_init(8, 1000, &onNewTick);
 	
 	if (argc > 1) {
 		initButtonSounds(argv[1]);

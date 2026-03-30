@@ -218,6 +218,8 @@ static void lancerModeLocal() {
 	BandFrame_t		bandFrame;
 	buttonStateMap_t map;
 
+	int delta = 0;
+
 
 	int 			timer = 0;
 	int				start = 0;
@@ -227,8 +229,6 @@ static void lancerModeLocal() {
 	int				beatTimeMs = 60 * 1000 / bpm / beatSubdivision;
 
 	int 			beatSubdAmount = 0;
-
-	printf("Subdivision Beat Time: %d ms\n", beatTimeMs);
 
 	TIMING_init(8, 1000, onNewTick);
 
@@ -306,9 +306,10 @@ static void lancerModeLocal() {
 		}
 
 
-		timer += SDL_GetTicks() - start;
+		delta = SDL_GetTicks() - start;
 
-		TIMING_update(SDL_GetTicks() - start);
+		timer += delta;
+		TIMING_update(delta);
 		
 	}
 

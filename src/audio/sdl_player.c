@@ -135,12 +135,33 @@ int sdl_player_play(const char *wav_path)
 
 
 int sdl_player_play_chunk(Mix_Chunk *chunk) {
-
-    int channel = Mix_PlayChannel(-1, chunk, 0);
-    if (channel < 0) {
-        fprintf(stderr, "[sdl_player] Erreur Mix_PlayChannel : %s\n", Mix_GetError());
+    if (!chunk) {
+        fprintf(stderr, "[sdl_player] Invalid chunk\n");
         return -1;
     }
+
+    static int cursor = 0;  // round-robin cursor across channels
+    int num_channels = Mix_AllocateChannels(-1);
+
+    // 1. Try to play on a free channel first
+    int channel = Mix_PlayChannel(-1, chunk, 0);
+    if (channel >= 0) {
+        return channel;
+    }
+
+    // 2. No free channel: force playback using the cursor
+    channel = cursor;
+    Mix_HaltChannel(channel);
+    channel = Mix_PlayChannel(channel, chunk, 0);
+    if (channel < 0) {
+        fprintf(stderr, "[sdl_player] Cannot force play chunk: %s\n", Mix_GetError());
+        return -1;
+    }
+
+    // 3. Increment cursor cyclically
+    cursor = (cursor + 1) % num_channels;
+
+    return channel;
     
 }
 

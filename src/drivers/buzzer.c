@@ -27,8 +27,10 @@ void DBUZZER_setupBuzzer() {
 
     DCOMMON_initWPi();
 
+#ifndef SIMULATED
     pinMode(BUZZER_GPIO, OUTPUT);
     softToneCreate(BUZZER_GPIO);
+#endif
 
     wasSetup = 1;
 
