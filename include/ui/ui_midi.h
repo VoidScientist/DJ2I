@@ -50,6 +50,7 @@ void uiMidi_draw(uiContext_t *ctx,
                  const int            lineStates[],
                  const uiRecordedPress *const presses[],
                  const int            pressCounts[],
-                 int                  cursorPos);
+                 int                  cursorPos,
+                 int                  recordFlag);
 
 #endif /* UI_MIDI_H */

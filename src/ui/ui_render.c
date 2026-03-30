@@ -111,7 +111,8 @@ void uiRender_frame(uiContext_t *ctx,
                     const int                 lineStates[],
                     const uiRecordedPress    *const presses[],
                     const int                 pressCounts[],
-                    int                       cursorPos)
+                    int                       cursorPos,
+                    int                       recordFlag)
 {
     /* 1. Effacement. */
     uiWindow_clear(ctx);
@@ -143,7 +144,7 @@ void uiRender_frame(uiContext_t *ctx,
                 mw, mh,
                 lineStates,
                 presses, pressCounts,
-                cursorPos);
+                cursorPos, recordFlag);
 
     /* 6. Présentation. */
     uiWindow_present(ctx);

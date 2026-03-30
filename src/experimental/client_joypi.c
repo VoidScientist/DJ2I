@@ -313,6 +313,7 @@ static void lancerModeLocal() {
 							isPaused = 1;
 							TIMING_setPause(isPaused);
 							TIMING_reset();
+							DSEGMENT_displayNumber(TIMING_getCurrentTick());
 							RECORD_setCurrentChannel(currentRecordChannel);
 							break;
 						}
@@ -373,7 +374,7 @@ static void lancerModeLocal() {
 		uiRender_frame(&ctx, map, buttonNamePtrs, channelStates,
 					(const uiRecordedPress *const *)recordPtrs,
 					amountRecorded,
-					TIMING_getCurrentTick());
+					TIMING_getCurrentTick(), isRecording);
 
 		while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {

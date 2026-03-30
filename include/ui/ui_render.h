@@ -47,6 +47,7 @@ void uiRender_frame(uiContext_t *ctx,
                     const int                 lineStates[],
                     const uiRecordedPress    *const presses[],
                     const int                 pressCounts[],
-                    int                       cursorPos);
+                    int                       cursorPos,
+                    int                       recordFlag);
 
 #endif /* UI_RENDER_H */

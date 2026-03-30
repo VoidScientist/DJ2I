@@ -176,15 +176,19 @@ static void s_drawTrackPresses(uiContext_t *ctx,
 static void s_drawCursor(uiContext_t *ctx,
                           int x, int w,
                           int originY, int height,
-                          int cursorPos)
+                          int cursorPos, int recordFlag)
 {
     int cy = s_tickToY(cursorPos, originY, height);
 
-    SDL_SetRenderDrawColor(ctx->renderer,
+    if (recordFlag) {
+        SDL_SetRenderDrawColor(ctx->renderer, 80, 220, 80, 200); 
+    } else {
+        SDL_SetRenderDrawColor(ctx->renderer,
                            UI_COLOR_MIDI_CURSOR_R,
                            UI_COLOR_MIDI_CURSOR_G,
                            UI_COLOR_MIDI_CURSOR_B,
                            UI_COLOR_MIDI_CURSOR_A);
+    }
 
     int i;
     for (i = 0; i < UI_MIDI_CURSOR_W; i++) {
@@ -201,7 +205,8 @@ void uiMidi_draw(uiContext_t *ctx,
                  const int             lineStates[],
                  const uiRecordedPress *const presses[],
                  const int             pressCounts[],
-                 int                   cursorPos)
+                 int                   cursorPos,
+                 int                   recordFlag)
 {
     int i;
 
@@ -220,5 +225,5 @@ void uiMidi_draw(uiContext_t *ctx,
     }
 
     /* Curseur temporel. */
-    s_drawCursor(ctx, x, w, y, h, cursorPos);
+    s_drawCursor(ctx, x, w, y, h, cursorPos, recordFlag);
 }

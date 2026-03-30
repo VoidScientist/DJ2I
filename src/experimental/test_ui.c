@@ -192,7 +192,7 @@ int main(void)
                        s_lineStates,
                        s_presses,
                        s_pressCounts,
-                       cursorPos);
+                       cursorPos, 0);
 
         SDL_Delay(TEST_FRAME_MS);
     }

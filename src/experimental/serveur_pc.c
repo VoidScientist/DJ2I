@@ -296,7 +296,7 @@ void serveur(uiContext_t *ctx) {
 		uiRender_frame(ctx, buttonMap, buttonNamePtrs, channelStates,
 					(const uiRecordedPress *const *)recordPtrs,
 					amountRecorded,
-					TIMING_getCurrentTick());
+					TIMING_getCurrentTick(), isRecording);
 
 
 		elapsed = SDL_GetTicks() - t0;
