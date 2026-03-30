@@ -11,6 +11,8 @@
 
 #include <SDL2/SDL.h>
 
+#define MAX_UI_NAME 16
+
 /**
  * @brief Contexte SDL principal de l'interface.
  *
@@ -31,7 +33,7 @@ typedef struct {
  * l'éditeur et placée verticalement selon sa valeur temporelle.
  */
 typedef struct {
-    char *name; /**< @brief Nom du son joué, affiché au-dessus du cercle. */
+    char name[MAX_UI_NAME]; /**< @brief Nom du son joué, affiché au-dessus du cercle. */
     int   time; /**< @brief Position temporelle dans [0, 1000] sur la ligne. */
 } uiRecordedPress;
 
