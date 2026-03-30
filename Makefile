@@ -46,7 +46,7 @@ OBJ_PATH = $(OBJ_ROOT)/$(TARGET)
 # |
 # | Flags compilation C
 # |
-CFLAGS = -Wimplicit -I $(INCLUDE_PATH) -std=c11 -D_POSIX_C_SOURCE=200809L 
+CFLAGS = -Wimplicit -I $(INCLUDE_PATH) -std=c11 -D_POSIX_C_SOURCE=200809L -DVERSION=\"$(VERSION)\" -DPROJECT_NAME=\"$(PROJECT_NAME)\"
 LDFLAGS = -L $(LIB_PATH)
 
 ifeq ($(TARGET), x86_64)
@@ -101,8 +101,9 @@ include $(SRC_PATH)/audio/audio.mk
 include $(SRC_PATH)/app/app.mk
 include $(SRC_PATH)/inet/inet.mk
 include $(SRC_PATH)/logging/logging.mk
+include $(SRC_PATH)/ui/ui.mk
 
-build: build-init drivers-build audio-build app-build inet-build logging-build experimental-build
+build: build-init drivers-build audio-build app-build inet-build logging-build ui-build experimental-build
 	$Q echo Fini de compiler pour: $(TARGET) !
 
 
@@ -111,9 +112,9 @@ build-init:
 	$Q mkdir -p $(BUILD_PATH) $(OBJ_PATH)
 
 
-clean: drivers-clean audio-clean app-clean inet-clean logging-clean
+clean: drivers-clean audio-clean app-clean inet-clean logging-clean ui-clean
 	$Q echo Suppression de tous les builds.
-	$Q rm -rf $(BUILD_PATH) $(OBJ_PATH)
+	$Q rm -rf $(BUILD_PATH)/* $(OBJ_PATH)
 
 
 install:

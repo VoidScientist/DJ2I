@@ -314,8 +314,8 @@ static void lancerModeLocal() {
 	}
 
 	DSEGMENT_setPowerState(DRIVERS_OFF);
-	DMATRIX_clearMatrix();
-
+	DMATRIX_setOperationMode(DRIVERS_OFF);
+	
 	/* Nettoyage */
 	spectrum_mapper_reset();
 	fft_engine_cleanup();
