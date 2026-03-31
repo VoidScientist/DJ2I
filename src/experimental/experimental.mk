@@ -29,13 +29,16 @@ $(EXPERIMENTAL_FOLDER)/exp_seven_seg: $(EXPERIMENTAL_SRC_PATH)/exp_seven_seg.c
 	$Q echo -e "Compilé: $@"
 
 $(EXPERIMENTAL_FOLDER)/serveur_pc: $(EXPERIMENTAL_SRC_PATH)/serveur_pc.c
-	$Q $(CC) $(CFLAGS) $(LDFLAGS) $< -o $@ -lapp -linet -llogging -laudio -lSDL2 -lSDL2_mixer -lm -lpthread
+	$Q $(CC) $(CFLAGS) $(LDFLAGS) $< -o $@ -lui -lapp -linet -llogging -laudio -lSDL2 -lSDL2_mixer -lm -lpthread
 	$Q echo -e "Compilé: $@"
 
 $(EXPERIMENTAL_FOLDER)/client_joypi: $(EXPERIMENTAL_SRC_PATH)/client_joypi.c
-	$Q $(CC) $(CFLAGS) $(LDFLAGS) $< -o $@  -ldrivers $(OPTWIRINGPI) -lapp -linet -llogging -laudio -lSDL2 -lSDL2_mixer -lm -lpthread
+	$Q $(CC) $(CFLAGS) $(LDFLAGS) $< -o $@  -lui -ldrivers $(OPTWIRINGPI) -lapp -linet -llogging -laudio -lSDL2 -lSDL2_mixer -lm -lpthread
 	$Q echo -e "Compilé: $@"
 
+$(EXPERIMENTAL_FOLDER)/test_ui: $(EXPERIMENTAL_SRC_PATH)/test_ui.c 
+	$Q $(CC) $(CFLAGS) $(LDFLAGS) $< -o $@  -ldrivers $(OPTWIRINGPI) -lui -lSDL2 
+	$Q echo -e "Compilé: $@"
 
 
 

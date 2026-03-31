@@ -28,6 +28,7 @@ static int paused = 0;
 
 static int wasSetup = 0;
 
+static int timer = 0;
 
 void TIMING_init(int maxTimeS, int ticksAmount, timingCallback_t callbackNew) {
 
@@ -49,7 +50,6 @@ void TIMING_init(int maxTimeS, int ticksAmount, timingCallback_t callbackNew) {
 }
 
 void TIMING_update(int deltaMS) {
-    static int timer = 0;
 
     if (!setupGuard()) return;
 
@@ -86,6 +86,14 @@ int TIMING_getMaxTicks() {
 void TIMING_setPause(int state) {
 
     paused = state;
+}
+
+
+void TIMING_reset() {
+
+    currentTick = 0;
+    timer = 0;
+
 }
 
 

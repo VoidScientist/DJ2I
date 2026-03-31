@@ -34,6 +34,8 @@
 
 #include "app/dial.h"
 
+#include <ui/ui.h>
+
 /*
 *****************************************************************************************
  *	\noop		C O N S T A N T E S
@@ -84,7 +86,16 @@ static sem_t			semCanClose;
  * Chargés depuis sounds/btn0.wav ... sounds/btn15.wav au démarrage.
  * Si un fichier est absent, la case correspondante reste NULL.
  */
-static Mix_Chunk		*buttonSounds[MAX_BUTTONS];
+static recordNamedChunk_t	buttonSounds[MAX_BUTTONS];
+
+static char        buttonNames[MAX_BUTTONS][MAX_RECORD_NAME_LENGTH];
+static const char *buttonNamePtrs[MAX_BUTTONS];  // ← tableau de pointeurs
+
+static buttonStateMap_t buttonMap;
+
+static int isPaused = 0;
+static int isRecording = 1;
+static int currentRecordChannel = 0;
 
 /*
 *****************************************************************************************
@@ -104,15 +115,20 @@ static void initSignaux() {
 }
 
 static void initButtonSounds(char *sounds_dir) {
-	char path[128];
-	int i;
+    char path[128];
+    int i;
+    recordNamedChunk_t tmp;
 
-	for (i = 0; i < MAX_BUTTONS; i++) {
-		sprintf(path, "%s/btn%d.wav", sounds_dir, i);
-		buttonSounds[i] = Mix_LoadWAV(path);
-		if (buttonSounds[i] == NULL)
-			printf("[serveur] Son '%s' non trouve, bouton %d muet.\n", path, i);
-	}
+    for (i = 0; i < MAX_BUTTONS; i++) {
+        sprintf(path, "%s/btn%d.wav", sounds_dir, i);
+        snprintf(tmp.name, MAX_RECORD_NAME_LENGTH, "btn%d", i);
+        snprintf(buttonNames[i], MAX_RECORD_NAME_LENGTH, "btn%d", i);
+        buttonNamePtrs[i] = buttonNames[i];  // pointe vers le string
+        tmp.chunk = Mix_LoadWAV(path);
+        if (tmp.chunk == NULL)
+            printf("[client] Son '%s' non trouve, bouton %d muet.\n", path, i);
+        buttonSounds[i] = tmp;
+    }
 }
 
 /*
@@ -124,9 +140,13 @@ static void onButtonUpdated(buttonStateMap_t map) {
 	
 	for (int i = 0; i < BUTTON_AMOUNT; i++) {
 	
+		buttonMap[i] = map[i];
 		if (map[i] != B_PRESSED) continue;
-		RECORD_recordPress(buttonSounds[i], TIMING_getCurrentTick());
-		sdl_player_play_chunk(buttonSounds[i]);
+		sdl_player_play_chunk(buttonSounds[i].chunk);
+
+		if (isRecording && !isPaused) {
+			RECORD_recordPress(&buttonSounds[i], TIMING_getCurrentTick());
+		}
 
 	}
 
@@ -177,13 +197,25 @@ void onNewTick(int currentTick) {
 
 }
 
-void serveur() {
+void serveur(uiContext_t *ctx) {
 	float			pcm[PLAYER_FRAME_SIZE];
 	float			magnitudes[FFT_BINS];
 	BandFrame_t		bandFrame;
 	pthread_t		threadReseau;
 	Uint32			t0, elapsed;
 	int				i;
+
+	uiRecordedPress  records[MAX_RECORD_CHANNELS][MAX_RECORDINGS];
+	uiRecordedPress *recordPtrs[MAX_RECORD_CHANNELS];
+	int 			amountRecorded[MAX_RECORD_CHANNELS];
+	SDL_Event		event;
+
+	int channelStates[4];
+
+	for (int i = 0; i < MAX_RECORD_CHANNELS; i++) {
+    	recordPtrs[i] = records[i];
+	}
+
 
 	/* Initialisation du réseau */
 	CHECK(sem_init(&semCanClose, 0, 0), "sem_init()");
@@ -217,6 +249,56 @@ void serveur() {
 
 		}
 
+		while (SDL_PollEvent(&event)) {
+			if (event.type == SDL_QUIT) {
+				mustDisconnect = 1;
+				break;
+			}
+
+			if (event.type == SDL_KEYDOWN) {
+				switch (event.key.keysym.sym) {
+
+					case SDLK_p: {
+						isPaused = !isPaused;
+						TIMING_setPause(isPaused);
+						break;
+					}
+
+					case SDLK_r: {
+						isRecording = !isRecording;
+						break;
+					}
+
+					case SDLK_n: {
+						if (currentRecordChannel >= MAX_RECORD_CHANNELS) break;
+						currentRecordChannel = (currentRecordChannel + 1) % MAX_RECORD_CHANNELS;
+						RECORD_setCurrentChannel(currentRecordChannel);
+						break;
+					}
+
+					case SDLK_z: {
+						RECORD_clearRecordings();
+						currentRecordChannel = 0;
+						isPaused = 1;
+						TIMING_setPause(isPaused);
+						TIMING_reset();
+						RECORD_setCurrentChannel(currentRecordChannel);
+						break;
+					}
+
+				}
+			}
+		}
+
+		RECORD_getActiveChannelsArray(channelStates);
+		RECORD_getRecordedPresses(recordPtrs, amountRecorded);
+
+		uiRender_frame(ctx, buttonMap, buttonNamePtrs, channelStates,
+					(const uiRecordedPress *const *)recordPtrs,
+					amountRecorded,
+					TIMING_getCurrentTick(), isRecording);
+
+
 		elapsed = SDL_GetTicks() - t0;
 		TIMING_update(FRAME_MS);
 		if (elapsed < FRAME_MS)
@@ -233,8 +315,7 @@ void serveur() {
 
 int main(int argc, char *argv[]) {
 	progName = argv[0];
-
-	(void)argc;
+	uiContext_t ctx;
 
 	fprintf(stderr, "Lancement du serveur PC [PID:%d] sur [%s:%d]\n",
 		getpid(), BIND_ALL, PORT_SERVEUR);
@@ -260,6 +341,10 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_FAILURE);
 	}
 
+	uiWindow_init(&ctx, PROJECT_NAME, 
+			SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 
+			UI_WINDOW_DEFAULT_W, UI_WINDOW_DEFAULT_H);
+
 	TIMING_init(8, 1000, &onNewTick);
 	
 	if (argc > 1) {
@@ -268,7 +353,7 @@ int main(int argc, char *argv[]) {
 		initButtonSounds("sounds");
 	}
 
-	serveur();
+	serveur(&ctx);
 
 	return EXIT_SUCCESS;
 }

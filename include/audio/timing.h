@@ -25,5 +25,7 @@ int TIMING_getCurrentTick();
 
 int TIMING_getMaxTicks();
 
+void TIMING_reset();
+
 
 #endif

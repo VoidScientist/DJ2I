@@ -38,6 +38,8 @@
 
 #include "app/dial.h"
 
+#include <ui/ui.h>
+
 /*
 *****************************************************************************************
  *	\noop		C O N S T A N T E S
@@ -101,9 +103,12 @@ static pthread_t	threadDial;
  * Chargés depuis sounds/btn0.wav ... sounds/btn15.wav au démarrage.
  * Utilisés en mode local et en mode connecté.
  */
-static Mix_Chunk	*buttonSounds[MAX_BUTTONS];
+static recordNamedChunk_t	buttonSounds[MAX_BUTTONS];
 
-/*
+static char        buttonNames[MAX_BUTTONS][MAX_RECORD_NAME_LENGTH];
+static const char *buttonNamePtrs[MAX_BUTTONS];  // ← tableau de pointeurs
+
+/**
 *****************************************************************************************
  *	\noop		F O N C T I O N S   D ' I N I T I A L I S A T I O N
  */
@@ -121,15 +126,20 @@ static void initSignaux() {
 }
 
 static void initButtonSounds() {
-	char path[128];
-	int i;
+    char path[128];
+    int i;
+    recordNamedChunk_t tmp;
 
-	for (i = 0; i < MAX_BUTTONS; i++) {
-		sprintf(path, "%s/btn%d.wav", SOUNDS_DIR, i);
-		buttonSounds[i] = Mix_LoadWAV(path);
-		if (buttonSounds[i] == NULL)
-			printf("[client] Son '%s' non trouve, bouton %d muet.\n", path, i);
-	}
+    for (i = 0; i < MAX_BUTTONS; i++) {
+        sprintf(path, "%s/btn%d.wav", SOUNDS_DIR, i);
+        snprintf(tmp.name, MAX_RECORD_NAME_LENGTH, "btn%d", i);
+        snprintf(buttonNames[i], MAX_RECORD_NAME_LENGTH, "btn%d", i);
+        buttonNamePtrs[i] = buttonNames[i];  // pointe vers le string
+        tmp.chunk = Mix_LoadWAV(path);
+        if (tmp.chunk == NULL)
+            printf("[client] Son '%s' non trouve, bouton %d muet.\n", path, i);
+        buttonSounds[i] = tmp;
+    }
 }
 
 /*
@@ -212,23 +222,7 @@ void onNewTick(int currentTick) {
 
 }
 
-static void lancerModeLocal() {
-	float			pcm[PLAYER_FRAME_SIZE];
-	float			magnitudes[FFT_BINS];
-	BandFrame_t		bandFrame;
-	buttonStateMap_t map;
-
-	int delta = 0;
-
-
-	int 			timer = 0;
-	int				start = 0;
-
-	int 			bpm = 160;
-	int				beatSubdivision = 8;
-	int				beatTimeMs = 60 * 1000 / bpm / beatSubdivision;
-
-	int 			beatSubdAmount = 0;
+int initLocal(uiContext_t *ctx) {
 
 	TIMING_init(8, 1000, onNewTick);
 
@@ -237,28 +231,64 @@ static void lancerModeLocal() {
 	/* Initialisation du pipeline audio complet */
 	if (sdl_player_init() != 0) {
 		fprintf(stderr, "[client] Erreur initialisation audio\n");
-		return;
+		return -1;
 	}
+
+	uiWindow_init(ctx, PROJECT_NAME, 
+				SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 
+				UI_WINDOW_DEFAULT_W, UI_WINDOW_DEFAULT_H);
 
 	if (fft_engine_init() != 0) {
 		fprintf(stderr, "[client] Erreur initialisation FFT\n");
 		sdl_player_cleanup();
-		return;
+		return -1;
 	}
 
 	if (spectrum_mapper_init() != 0) {
 		fprintf(stderr, "[client] Erreur initialisation mapper\n");
 		fft_engine_cleanup();
 		sdl_player_cleanup();
-		return;
+		return -1;
 	}
 
 	initButtonSounds();
+
+}
+
+static void lancerModeLocal() {
+	float			pcm[PLAYER_FRAME_SIZE];
+	float			magnitudes[FFT_BINS];
+	BandFrame_t		bandFrame;
+	buttonStateMap_t map;
+	uiContext_t 	ctx;
+	uiRecordedPress  records[MAX_RECORD_CHANNELS][MAX_RECORDINGS];
+	uiRecordedPress *recordPtrs[MAX_RECORD_CHANNELS];
+	int 			amountRecorded[MAX_RECORD_CHANNELS];
+	SDL_Event		event;
+
+	int channelStates[4];
+
+	int start = 0;
+	int timer = 0;
+
+	int isPaused = 0;
+	int isRecording = 1;
+	int currentRecordChannel = 0;
+
+	int delta = 0;
+
+
+	if (initLocal(&ctx) < 0) return;
+
+	for (int i = 0; i < MAX_RECORD_CHANNELS; i++) {
+    	recordPtrs[i] = records[i];
+	}
 
 	/* Boucle principale */
 	while (!mustDisconnect) {
 
 		start = SDL_GetTicks();
+
 
 		DBUTTON_scanButtons();
 
@@ -268,9 +298,53 @@ static void lancerModeLocal() {
 			DBUTTON_getButtonMap(map);
 
 			for (int i = 0; i < BUTTON_AMOUNT; i++) {
+
 				if (map[i] != B_PRESSED) continue;
-				RECORD_recordPress(buttonSounds[i], TIMING_getCurrentTick());
-				sdl_player_play_chunk(buttonSounds[i]);
+		
+				int row = i / 4;
+				int col = i % 4;
+
+				if (row == 3) {
+					switch (col) {
+
+						case 0: {
+							RECORD_clearRecordings();
+							currentRecordChannel = 0;
+							isPaused = 1;
+							TIMING_setPause(isPaused);
+							TIMING_reset();
+							DSEGMENT_displayNumber(TIMING_getCurrentTick());
+							RECORD_setCurrentChannel(currentRecordChannel);
+							break;
+						}
+
+						case 1: {
+							if (currentRecordChannel >= MAX_RECORD_CHANNELS) break;
+							currentRecordChannel = (currentRecordChannel + 1) % MAX_RECORD_CHANNELS;
+							RECORD_setCurrentChannel(currentRecordChannel);
+							break;
+						}
+						case 2: {
+							isRecording = !isRecording;
+							break;
+						}
+						case 3: {
+							isPaused = !isPaused;
+							TIMING_setPause(isPaused);
+							break;
+						}
+
+					}
+				} else {
+					sdl_player_play_chunk(buttonSounds[i].chunk);
+
+					if (isRecording && !isPaused) {
+						RECORD_recordPress(&buttonSounds[i], TIMING_getCurrentTick());
+					}
+
+				}
+
+
 			}
 
 		}
@@ -294,18 +368,21 @@ static void lancerModeLocal() {
 
         }
 
+		RECORD_getActiveChannelsArray(channelStates);
+		RECORD_getRecordedPresses(recordPtrs, amountRecorded);
 
-		if (timer >= beatTimeMs) {
-			beatSubdAmount++;
-			timer -= beatTimeMs;
-		}
+		uiRender_frame(&ctx, map, buttonNamePtrs, channelStates,
+					(const uiRecordedPress *const *)recordPtrs,
+					amountRecorded,
+					TIMING_getCurrentTick(), isRecording);
 
-		if (beatSubdAmount >= beatSubdivision) {
-			sdl_player_play_chunk(buttonSounds[1]);
-			beatSubdAmount -= beatSubdivision;
-		}
-
-
+		while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                mustDisconnect = 1;
+				break;
+            }
+        }
+		
 		delta = SDL_GetTicks() - start;
 
 		timer += delta;
@@ -314,12 +391,14 @@ static void lancerModeLocal() {
 	}
 
 	DSEGMENT_setPowerState(DRIVERS_OFF);
-	DMATRIX_clearMatrix();
+	DMATRIX_setOperationMode(DRIVERS_OFF);
 
 	/* Nettoyage */
 	spectrum_mapper_reset();
 	fft_engine_cleanup();
 	sdl_player_cleanup();
+
+	uiWindow_destroy(&ctx);
 
 }
 
